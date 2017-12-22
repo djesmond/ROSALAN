@@ -1,0 +1,12 @@
+<!--
+  Used for visualising the turtlebot while building a map or navigating with the ros navistack.
+ -->
+<launch>
+
+ <rosparam command="load" file="$(find multi_robot_stage)/params/robot_goals1.yaml"/>
+ <rosparam command="load" file="$(find multi_robot_stage)/params/params_turtle.yaml"/>
+  <node pkg="collvoid_controller" type="controller.py" name="controller" output="screen"/> 
+   <node pkg="collvoid_controller" type="controllerRobots.py" name="controller_robots" output="screen" /> 
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_rviz_launchers)/rviz/navigation.rviz"/>
+</launch>

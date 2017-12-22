@@ -1,0 +1,24 @@
+<!-- xml -->
+<launch> 
+
+  <param name="/use_sim_time" value="true"/>
+  
+  <rosparam command="load" file="$(find multi_robot_stage)/params/robot_goals_aml.yaml"/>
+  <node pkg="collvoid_controller" type="controller.py" name="controller" output="screen"/>
+
+  <!-- ROBOTS-->
+  <group ns="robot_0">
+    <param name="tf_prefix" value="robot_0" />
+    <param name="amcl/initial_pose_x" value="5" />
+    <param name="amcl/initial_pose_y" value="2.2" />
+    <include file="$(find multi_robot_stage)/launch/move_base.launch" >     
+      <arg name="robot_name" value="robot_0" />
+    </include>
+    <node pkg="collvoid_controller" type="controllerRobots.py" name="controllerRobots" output="screen" />
+    
+
+  </group>
+
+  
+
+</launch>

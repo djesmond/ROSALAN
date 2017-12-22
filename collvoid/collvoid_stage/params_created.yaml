@@ -1,0 +1,6 @@
+/use_sim_time: true
+robot_0:
+    goals:
+        x: [-3.402082]
+        y: [3.202082]
+        ang: [-0.785398]

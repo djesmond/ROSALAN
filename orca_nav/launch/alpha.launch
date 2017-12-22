@@ -1,0 +1,40 @@
+<launch>
+
+  <!--- Run Robot Pose EKF -->
+  <include file="$(find collvoid_turtlebot)/launch/base.launch" />
+
+ <!-- 3D sensor -->
+  <arg name="3d_sensor" default="$(env TURTLEBOT_3D_SENSOR)"/>  <!-- r200, kinect, asus_xtion_pro -->
+  <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
+    <arg name="rgb_processing" value="false" />
+    <arg name="depth_registration" value="false" />
+    <arg name="depth_processing" value="false" />
+    
+    <!-- We must specify an absolute topic name because if not it will be prefixed by "$(arg camera)".
+         Probably is a bug in the nodelet manager: https://github.com/ros/nodelet_core/issues/7 --> 
+    <arg name="scan_topic" value="/scan" />
+  </include>
+
+  <!-- Map server -->
+  <arg name="map_file" default="$(env TURTLEBOT_MAP_FILE)"/>
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+
+  <!--- Run AMCL -->
+  <include file="$(find collvoid_turtlebot)/launch/amcl_turtlebot.launch"/> 
+
+  <!--- Run Controller -->
+  <rosparam command="load" file="$(find collvoid_controller)/goals.yaml"/>
+  <node pkg="collvoid_controller" type="controllerRobots.py" name="controller_robots" output="screen" />
+
+  <!--- Run collvoid -->
+  <rosparam command="load" file="$(find collvoid_turtlebot)/params/params_created.yaml"/>
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam command="load" file="$(find collvoid_turtlebot)/params/params_turtle.yaml"/>
+    <param name="base_local_planner" value="collvoid_local_planner/CollvoidLocalPlanner" />
+    <remap from="/cmd_vel" to="/turtlebot_node/cmd_vel"/>
+  </node>
+
+
+
+</launch>
