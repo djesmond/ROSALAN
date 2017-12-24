@@ -3,6 +3,6 @@
  -->
 <launch>
   
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find multi_robot_stage)/rviz/navigation.rviz"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find orca_nav)/rviz/navigation.rviz"/>
  
 </launch>

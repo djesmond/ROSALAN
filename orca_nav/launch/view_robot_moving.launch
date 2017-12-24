@@ -3,8 +3,8 @@
  -->
 <launch>
 
- <rosparam command="load" file="$(find multi_robot_stage)/params/robot_goals1.yaml"/>
- <rosparam command="load" file="$(find multi_robot_stage)/params/params_turtle.yaml"/>
+ <rosparam command="load" file="$(find orca_nav)/params/robot_goals1.yaml"/>
+ <rosparam command="load" file="$(find orca_nav)/params/params_turtle.yaml"/>
   <node pkg="collvoid_controller" type="controller.py" name="controller" output="screen"/> 
    <node pkg="collvoid_controller" type="controllerRobots.py" name="controller_robots" output="screen" /> 
 

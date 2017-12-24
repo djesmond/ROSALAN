@@ -2,8 +2,8 @@
 <launch>
 
   <!-- Name of the map to use (without path nor extension) and initial position -->
-  <arg name="map_file"       default=" $(find multi_robot_stage)/maps/blank.yaml"/> <!-- robopark_plan -->
-  <arg name="world_file"     default=" $(find multi_robot_stage)/maps/stage/blank.world"/>
+  <arg name="map_file"       default=" $(find orca_nav)/maps/blank.yaml"/> <!-- robopark_plan -->
+  <arg name="world_file"     default=" $(find orca_nav)/maps/stage/blank.world"/>
 
   <param name="/use_sim_time" value="true"/>
   
@@ -15,11 +15,11 @@
     
   </node>
   
-  <include file="$(find multi_robot_stage)/launch/robot_model.launch"/>
-  <include file="$(find multi_robot_stage)/launch/navigation.launch"/>
+  <include file="$(find orca_nav)/launch/robot_model.launch"/>
+  <include file="$(find orca_nav)/launch/navigation.launch"/>
 
   <!--  **************** Visualisation ****************  -->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find multi_robot_stage)/rviz/multi_robot_navigation.rviz"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find orca_nav)/rviz/multi_robot_navigation.rviz"/>
   <node name="sound_play" pkg="sound_play" type="soundplay_node.py" />
   <node name="play_builtin" pkg="sound_play" type="playbuiltin.py" />
 

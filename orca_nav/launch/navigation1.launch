@@ -3,7 +3,7 @@
 
   <param name="/use_sim_time" value="true"/>
   
-  <rosparam command="load" file="$(find multi_robot_stage)/params/robot_goals1.yaml"/>
+  <rosparam command="load" file="$(find orca_nav)/params/robot_goals1.yaml"/>
   <node pkg="collvoid_controller" type="controller.py" name="controller" output="screen"/>
 
   <!-- ROBOTS-->
@@ -11,7 +11,7 @@
     <param name="tf_prefix" value="robot_0" />
     <param name="amcl/initial_pose_x" value="0.5" />
     <param name="amcl/initial_pose_y" value="3.5" />
-    <include file="$(find multi_robot_stage)/launch/move_base.launch" >     
+    <include file="$(find orca_nav)/launch/move_base.launch" >     
       <arg name="robot_name" value="robot_0" />
     </include>
     <node pkg="collvoid_controller" type="controllerRobots.py" name="controllerRobots" output="screen" />
