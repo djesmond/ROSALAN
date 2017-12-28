@@ -1,0 +1,33 @@
+<!-- xml -->
+<launch> 
+
+  <param name="/use_sim_time" value="true"/>
+  
+  <rosparam command="load" file="$(find orca_nav)/params/robot_goals_blank.yaml"/>
+  <node pkg="collvoid_controller" type="controller.py" name="controller" output="screen"/>
+
+  <!-- ROBOTS-->
+  <group ns="robot_0">
+    <param name="tf_prefix" value="robot_0" />
+    <param name="amcl/initial_pose_x" value="5.0" />
+    <param name="amcl/initial_pose_y" value="3.0" />
+    <include file="$(find orca_nav)/launch/move_base.launch" >     
+      <arg name="robot_name" value="robot_0" />
+    </include>
+    <node pkg="collvoid_controller" type="controllerRobots.py" name="controllerRobots" output="screen" />
+    
+
+  </group>
+
+  <group ns="robot_1">
+    <param name="tf_prefix" value="robot_1" />
+    <param name="amcl/initial_pose_x" value="6.0" />
+    <param name="amcl/initial_pose_y" value="2.0" />
+    <include file="$(find orca_nav)/launch/move_base.launch" >     
+      <arg name="robot_name" value="robot_1" />
+    </include>
+    <node pkg="collvoid_controller" type="controllerRobots.py" name="controllerRobots" />
+  </group>
+  
+
+</launch>
