@@ -188,7 +188,7 @@ namespace collvoid {
         startVal.actionId = 0;
         startVal.actionReward = 0;
         // Initialize all values to neutral
-        this->timeWindow = std::vector<timeStep>(10, startVal);
+        this->timeWindow = std::vector<timeStep>(100, startVal);
 
         //float velDir[6] = {0.00000,1.445935,4.250190, 6.245753, 3.766477, 3.944874}; 
 
@@ -256,24 +256,28 @@ namespace collvoid {
         newAction.actionReward = Reward;
         //std::cout << newAction.actionId << newAction.actionReward << std::endl;
         this->timeWindow[0] = newAction;
-        
+
         static const float m_pi = 3.14159265358979323846f;
         float angles[4] = {0.00000, m_pi/4, m_pi, -m_pi/4 };
-        // Pick action with Boltzmann
-        int chosenActionId = this->Boltzmann();
-        // Update the chosen action
-        this->actionChosen_ = chosenActionId;
-        std::cout << "Selected action id: " << chosenActionId << std::endl;
+        
+        int ra = std::rand() % 10 + 1;
+        if (ra <= 1) {
+            // Pick action with Boltzmann
+            int chosenActionId = this->Boltzmann();
+            // Update the chosen action
+            this->actionChosen_ = chosenActionId;
+            std::cout << "Selected action id: " << chosenActionId << std::endl;
 
-        // Push the time window for next iteration
-        this->addNextTimeStep();
+            // Push the time window for next iteration
+            this->addNextTimeStep();
 
-        // Map to preferred velcoity
-        Vector2 newVpref = collvoid::rotateVectorByAngle(Vector2(this->currentVpref_), angles[chosenActionId]);
-        std::cout << "Selected vpref: " << newVpref.x() << " : " << newVpref.y() << std::endl;
+            // Map to preferred velcoity
+            Vector2 newVpref = collvoid::rotateVectorByAngle(Vector2(this->currentVpref_), angles[chosenActionId]);
+            std::cout << "Selected vpref: " << newVpref.x() << " : " << newVpref.y() << std::endl;
 
-        // remove (comment) this line to run with only ORCA (disable ALAN)
-        pref_velocity = newVpref;
+            // remove (comment) this line to run with only ORCA (disable ALAN)
+            pref_velocity = newVpref;
+        }
 
         // Log the ros duration
         ros::Time end = ros::Time::now();
