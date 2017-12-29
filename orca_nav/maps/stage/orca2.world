@@ -38,7 +38,7 @@ floorplan
 # throw in a robot
 
 turtlebot( pose [ 0.5 3.5 0 0 ] name "era" color "blue")
-turtlebot( pose [ 7.5 3.5 0 0 ] name "era2" color "yellow")
+turtlebot( pose [ 7.5 3.5 0 180 ] name "era2" color "yellow")
 
 
 #turtlebot

@@ -16,7 +16,7 @@
   </node>
   
   <include file="$(find orca_nav)/launch/robot_model.launch"/>
-  <include file="$(find orca_nav)/launch/navigation2.launch"/>
+  <include file="$(find orca_nav)/launch/navigation23.launch"/>
 
   <!--  **************** Visualisation ****************  -->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find orca_nav)/rviz/multi_robot_navigation.rviz"/>
