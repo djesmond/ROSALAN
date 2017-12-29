@@ -177,9 +177,22 @@ namespace collvoid {
         initCommon(nh);
         initialized_ = true;
         static const float m_pi = 3.14159265358979323846f;
-        float velDir[8] = {0.00000, m_pi/4, m_pi/2, m_pi-m_pi/4,m_pi, -3*m_pi/4   , -m_pi/2  ,-m_pi/4    };
-        float velMag[8] = {1.5,  1.5,1.5,  1.5,1.5, 1.5 ,1.5, 1.5};
+        //float velDir[8] = {0.00000, m_pi/4, m_pi/2, m_pi-m_pi/4,m_pi, -3*m_pi/4   , -m_pi/2  ,-m_pi/4    };
+        //float velMag[8] = {1.5,  1.5,1.5,  1.5,1.5, 1.5 ,1.5, 1.5};
+        // We are using only 4 actions
+        this->Actions = 4;
+
+
+        // Time Window setup
+        timeStep startVal;
+        startVal.actionId = 0;
+        startVal.actionReward = 0;
+        // Initialize all values to neutral
+        this->timeWindow = std::vector<timeStep>(10, startVal);
+
         //float velDir[6] = {0.00000,1.445935,4.250190, 6.245753, 3.766477, 3.944874}; 
+
+        this->isStarted = false;
         //ROS_INFO("ITS ME");
     }
 
@@ -217,38 +230,59 @@ namespace collvoid {
 
     void ROSAgent::computeNewVelocity(Vector2 pref_velocity, geometry_msgs::Twist &cmd_vel) {
         boost::mutex::scoped_lock lock(me_lock_);
+
+        if (!isStarted) {
+            // Start the clock (this will be executed on the first time the method is called)
+            this->startTime = ros::Time::now();
+            this->isStarted = true;
+        }
         
-         std::cout <<"\n My Position is : ["<< this->position_.x() << ", " << this->position_.y() <<"] and my vel is [" << this->velocity_.x()<< ", " <<  this->velocity_.y() <<"] LastVpref: [" <<this->currentVpref_.x() << ", " <<this->currentVpref_.y()  <<"], my goal is: ["<<this->currentGoal_.x() << ", " <<this->currentGoal_.y()  <<"] \n";
+        std::cout <<"\nMy Position is : [" << this->position_.x() << ", " << this->position_.y() << "] and my vel is [" << this->velocity_.x()<< ", " <<  this->velocity_.y() <<"] LastVpref: [" <<this->currentVpref_.x() << ", " <<this->currentVpref_.y()  <<"], my goal is: ["<<this->currentGoal_.x() << ", " <<this->currentGoal_.y()  <<"] \n";
          
-         Vector2 GoalVector= collvoid::normalize(Vector2(  this->currentGoal_.x()-this->position_.x(),  this->currentGoal_.y()-this->position_.y()));
-         
-         
-         //ComputeALANreward for the action chosen
-         
-         float gamma_=0.4;
-         float goal_progress= (this->velocity_ * GoalVector)/(float)0.5; //Assuming max velocity of 0.5
-         float politeness= (this->velocity_ * this->currentVpref_)/(float)0.25; //Assuming max velocity of 0.5
-         float Reward= goal_progress*(1-gamma_) + politeness*gamma_;
-         std::cout << "Reward of current Action is : Goal (" << goal_progress << "), Polite (" <<  politeness << ") = " << Reward << "\n";
-         this->actionReward_[this->getAction()]=Reward;
-         
-         //******* ADD CODE FOR SELECTING A NEW ACTION / PREFERRED VELOCITY ********* //
+        Vector2 GoalVector = collvoid::normalize(Vector2(  this->currentGoal_.x()-this->position_.x(),  this->currentGoal_.y()-this->position_.y()));
          
          
+        // ComputeALANreward for the action chosen
          
-         
-         
-         
-         
-         // Once a new action has been chosen, it has to be mapped to a preferred velocity (variable Vector2 pref_velocity)
-         
-         
-         for (size_t i = 0; i < agent_neighbors_.size(); i++) 
-         {
-           
-         std::cout <<"Current Position of neighbor " << i << " is : ["<< agent_neighbors_[i]->position_.x() << ", " << agent_neighbors_[i]->position_.y() <<"] and his vel was [" <<  agent_neighbors_[i]->velocity_.x()<< ", " <<  agent_neighbors_[i]->velocity_.y() <<"] \n";
+        float gamma_ = 0.4;
+        float goal_progress = (this->velocity_ * GoalVector)/(float)0.5; //Assuming max velocity of 0.5
+        float politeness = (this->velocity_ * this->currentVpref_)/(float)0.25; //Assuming max velocity of 0.5
+        float Reward = goal_progress*(1-gamma_) + politeness*gamma_;
+        std::cout << "Reward of current Action is : Goal (" << goal_progress << "), Polite (" <<  politeness << ") = " << Reward << "\n";
+
+        // Store the action info in the time Window
+        timeStep newAction;
+        newAction.actionId = this->getAction();
+        newAction.actionReward = Reward;
+        //std::cout << newAction.actionId << newAction.actionReward << std::endl;
+        this->timeWindow[0] = newAction;
         
-         }
+        static const float m_pi = 3.14159265358979323846f;
+        float angles[4] = {0.00000, m_pi/4, m_pi, -m_pi/4 };
+        // Pick action with Boltzmann
+        int chosenActionId = this->Boltzmann();
+        // Update the chosen action
+        this->actionChosen_ = chosenActionId;
+        std::cout << "Selected action id: " << chosenActionId << std::endl;
+
+        // Push the time window for next iteration
+        this->addNextTimeStep();
+
+        // Map to preferred velcoity
+        Vector2 newVpref = collvoid::rotateVectorByAngle(Vector2(this->currentVpref_), angles[chosenActionId]);
+        std::cout << "Selected vpref: " << newVpref.x() << " : " << newVpref.y() << std::endl;
+
+        // remove (comment) this line to run with only ORCA (disable ALAN)
+        pref_velocity = newVpref;
+
+        // Log the ros duration
+        ros::Time end = ros::Time::now();
+        std::cout << "Time is: " << end - this->startTime << std::endl;
+                  
+         
+        for (size_t i = 0; i < agent_neighbors_.size(); i++) {
+            std::cout <<"Current Position of neighbor " << i << " is : ["<< agent_neighbors_[i]->position_.x() << ", " << agent_neighbors_[i]->position_.y() <<"] and his vel was [" <<  agent_neighbors_[i]->velocity_.x()<< ", " <<  agent_neighbors_[i]->velocity_.y() <<"] \n";
+        }
         
         //Forward project agents
         setAgentParams(this); // This can be used for the position prediction part, need to add my own predicted position with current Vpref
@@ -490,179 +524,86 @@ namespace collvoid {
 
     }
 
-/*
-int ROSAgent::Boltzmann(int i)
-{  
-   int candidateAction[Actions];
-   int numCandidates=0;
-	int j;
-	
-	for (j=0; j<Actions; j++) 
-	{Qvalues[i][j]= LastActionEstimate[i][j];
-		
-		
-		candidateAction[j]=0;
-}
-	for (j=0; j<Actions; j++) 
-	{    this->actionReward_[j]
-		
-		if(i==agentViewed)
-			{
-				
-			std::cout << " comparing CANDIDATE: " << j << " with defVal: " << defaultValue[i][j] <<" with actual " <<  this->actionReward_[this->getAction()] << "\n"; 	
-			}
-		
-		if(defaultValue[i][j]>  Qvalues[i][currentVel[i]])//realProg[i])
-		{
-		    candidateAction[j]=1;	
-			numCandidates=numCandidates+1;
-			
-			if(i==agentViewed)
-			{
-				
-			std::cout << " CANDIDATE: " << j << " with defVal: " << defaultValue[i][j] << "\n"; 	
-			}
-		}
-		
-	}
-	
-	if(numCandidates==0)
-	{
-	 	
-		totnumcan=  totnumcan+1;
-	}
-	else
-	{
-		totnumcan=  totnumcan+numCandidates;
-	}
-	
-	
-   
-   //std::cout << " AGENT " << i <<" NUM CANDIDATES : " <<numCandidates << "\n"; 
-   samp=samp+1;
-	
-	
-	float sumBoltz=0;
-	for (j=0; j<Actions; j++) 
-	{   // Qvalues[i][j]= LastActionEstimate[i][j];
-		
-		if(candidateAction[j]>0)
-		{
-		sumBoltz=sumBoltz+exp(Qvalues[i][j]/temp[i]);
-		//sumBoltz=sumBoltz+((Qvalues[i][j])/(1));
-		
-	}
-		
-	}
-	
-	for (j=0; j<Actions; j++) 
-	{
-		
-		if(candidateAction[j]>0)
-		{
-		Boltz[i][j]=100*(exp(Qvalues[i][j]/temp[i]))/sumBoltz;
-		//Boltz[i][j]=100*(((Qvalues[i][j])/(1)))/sumBoltz;
-	}
-	else
-	{
-		Boltz[i][j]=0;
-		}
-		if(i==agentViewed)
-                    {
-                       std::cout << j << " Boltzmann value of : " << Boltz[i][j] << " with Qval: " << Qvalues[i][j] << "\n";
-                       
-                    }
-		
-		
-	}
-	
-	float probability= rand()%100;
-		if(i==agentViewed)
-                    {
-                       std::cout << "Boltzmann PROB of " <<j << " : " << probability << "\n";
-                       
-                    }
-	float current=0;
-	
-	for (j=0; j<Actions; j++) 
-	{
-		current=current+Boltz[i][j];
-		
-		if(probability<current)
-		{
-			
-			if(j!=chosenAction[i])
-			{
-				
-				lastReward[i]= realProg[i];
-				lastAction[i]=chosenAction[i];
-				changeAction[i]=1;
-				if(i==agentViewed)
-				{
-				   std::cout << "I am going to chage action from  " << chosenAction[i] << " to " << j << " and last reward is " << 	lastReward[i] <<"\n";
-				}
-				
-				}
-			
-			return j;
-		}
-		
-	}
-	return 0;
-	
-	
-}
+    int ROSAgent::Boltzmann() {   
+        int j;
+        // The temperature t used in Boltzman
+        float temp = 0.2;
+        // Save the result of the initial part of the boltzman
+        // calculation
+        float sumBoltz = 0;
+        // Store the reward averages for each action
+        float Qvalues[4];
+        // Store the softmax value for each action
+        float Boltz[4];
 
-int ROSAgent::BoltzmannOld(int i)
-{   
-   	int j;
-	float sumBoltz=0;
-	for (j=0; j<Actions; j++) 
-	{    Qvalues[i][j]= LastActionEstimate[i][j];
-		
-		
-		sumBoltz=sumBoltz+exp(Qvalues[i][j]/temp[i]);
-	
-		
-	}
-	
-	for (j=0; j<Actions; j++) 
-	{
-		
-		
-		Boltz[i][j]=100*(exp(Qvalues[i][j]/temp[i]))/sumBoltz;
-	
-		if(i==agentViewed)
-                    {
-                        std::cout << "Boltzmann value of " <<j << " : " << Boltz[i][j] << "\n";
-                       
-                    }
-		
-		
-	}
-	
-	float probability= rand()%100;
-	float current=0;
-		if(i==agentViewed)
-                    {
-                       std::cout << "Boltzmann PROB of " <<j << " : " << probability << "\n";
-                       
-                    }
-	
-	for (j=0; j<Actions; j++) 
-	{
-		current=current+Boltz[i][j];
-		
-		if(probability<current)
-		{
-			return j;
-		}
-		
-	}
-	return 0;
-	
-	
-}*/
+        // Update the averages
+        this->computeActionAverages();
+
+        for (j = 0; j < Actions; j++) {
+            Qvalues[j] = actionAverages[j]; //LastActionEstimate[j];
+            sumBoltz = sumBoltz + exp(Qvalues[j] / temp);
+        }
+        
+        for (j = 0; j < Actions; j++) {
+            Boltz[j] = 100 * (exp(Qvalues[j] / temp)) / sumBoltz;
+            
+            // std::cout << "Boltzmann value of " << j << " : " << Boltz[j] << "\n";
+        }
+        
+        float probability = rand() % 100;
+        float current = 0;
+        
+            // std::cout << "Boltzmann PROB of " << j << " : " << probability << "\n";
+        
+        for (j = 0; j < Actions; j++) {
+            current = current + Boltz[j];
+
+            if (probability < current) {
+                return j;
+            }
+            
+        }
+        return 0;
+    }
+
+    // Clear a slot in the timeWindow
+    // This will reset the first index
+    void ROSAgent::addNextTimeStep() {
+        timeStep resetVal;
+        resetVal.actionId = 0;
+        resetVal.actionReward = 0;
+        // Remove the oldest step 
+        this->timeWindow.pop_back();
+        // Reset front to allow override
+        this->timeWindow.insert(this->timeWindow.begin(), resetVal);
+    }
+
+    // Compute the average rewards for actions in the time window.
+    // If an action hasn't been performed within the window, it gets a 0 average
+    // Result store in the actionAverages property of Agent.
+    void ROSAgent::computeActionAverages() {
+        // We compute each action individually
+        // Could be omtimized
+        for (int i = 0; i < Actions; i++) {
+            int count = 0;
+            float sum = 0.0;
+
+            // Iterate through the time window and see if any
+            // actions match the id
+            for (int j = 0; j < timeWindow.size(); j++) {
+                //std::cout << timeWindow[j].actionId << std::endl;
+                if (timeWindow[j].actionId == i) {
+                    count++;
+                    sum += timeWindow[j].actionReward;
+                }
+            }
+            // Avoid division by 0
+            float average = count != 0 ? sum/count : 0;
+            std::cout << "Action: " << i << " Average: " << average << std::endl;
+            // Avoid negative averages
+            actionAverages[i] = average >= 0 ? average : 0;
+        }
+    }
 
 
     bool ROSAgent::compareNeighborsPositions(const AgentPtr &agent1, const AgentPtr &agent2) {

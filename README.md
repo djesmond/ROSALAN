@@ -30,7 +30,12 @@ $ roslaunch orca_nav deadlock.launch
 ```
 or
 ```
-roslaunch orca_nav congested.launch
+$ roslaunch orca_nav congested.launch
 ```
-Doesn't always work, so try a few times
+or 
+```
+$ roslaunch orca_nav congested.launch
+```
+Sometimes the controller window crashes, just restart the simulation.
+Sometimes only some of the robots move, just restart the simulation.
 

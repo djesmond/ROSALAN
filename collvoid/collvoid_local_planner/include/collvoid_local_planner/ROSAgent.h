@@ -56,10 +56,19 @@ namespace collvoid {
     Vector2 point2;
     ros::Time last_seen;
   };
+
+  struct timeStep {
+    int actionId;
+    float actionReward;
+  };
  
   class ROSAgent : public Agent {
   public:
     typedef boost::shared_ptr<ROSAgent> ROSAgentPtr;
+
+    std::vector<timeStep> timeWindow;
+    bool isStarted;
+    ros::Time startTime;
 
     ROSAgent();
 
@@ -74,6 +83,11 @@ namespace collvoid {
 
     void computeNewVelocity(Vector2 pref_velocity, geometry_msgs::Twist& cmd_vel);
 
+    int Boltzmann();
+
+    void addNextTimeStep();
+
+    void computeActionAverages();
 
     void computeOrcaVelocity(Vector2 pref_velocity);
     void computeClearpathVelocity(Vector2 pref_velocity);

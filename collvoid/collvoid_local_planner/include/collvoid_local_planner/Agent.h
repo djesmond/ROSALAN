@@ -91,11 +91,11 @@ namespace collvoid{
     double radius_;
     
     int Actions;
-    int actionId_[10];
+    int actionId_[4];
     int actionChosen_;
-    std::vector<Vector2> actionVel_[10];
-    double actionMag_[10];
-    double actionReward_[10];
+    std::vector<Vector2> actionVel_[4];
+    // double actionMag_[4];
+    float actionAverages[4];
     std::vector<Vector2> footprint_;
     
   
