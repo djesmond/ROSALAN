@@ -1,5 +1,5 @@
 # ROSALAN
-This project is for testing ALAN on turtlebots in ROS.
+This project is for testing [ALAN](https://arxiv.org/abs/1710.04296) on turtlebots in ROS.
 
 # Requirements
 * Ubuntu 14 (Later versions may not be supported)
@@ -34,7 +34,7 @@ $ roslaunch orca_nav congested.launch
 ```
 or 
 ```
-$ roslaunch orca_nav congested.launch
+$ roslaunch orca_nav blank.launch
 ```
 Sometimes the controller window crashes, just restart the simulation.
 Sometimes only some of the robots move, just restart the simulation.
