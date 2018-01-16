@@ -30,6 +30,17 @@
     </include>
     <node pkg="collvoid_controller" type="controllerRobots.py" name="controllerRobots" />
   </group>
+
+  <group ns="robot_2">
+    <param name="tf_prefix" value="robot_2" />
+    <param name="amcl/initial_pose_x" value="6.0" />
+    <param name="amcl/initial_pose_y" value="0.5" />
+    <param name="amcl/initial_pose_a" value="1.57" />
+    <include file="$(find orca_nav)/launch/move_base.launch" >     
+      <arg name="robot_name" value="robot_2" />
+    </include>
+    <node pkg="collvoid_controller" type="controllerRobots.py" name="controllerRobots" />
+  </group>
   
 
 </launch>
