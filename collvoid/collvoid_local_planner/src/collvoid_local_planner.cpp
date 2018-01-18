@@ -656,10 +656,7 @@ namespace collvoid_local_planner {
 
         collvoid::Vector2 pref_vel = collvoid::Vector2(goal_dir.x(), goal_dir.y());
 
-        
-
-        //TODO collvoid added
-        
+        // This is where we use ALAN to modify pref_vel
         me_->computeNewVelocity(pref_vel, cmd_vel);
         
         //ROS_INFO("CMDVEL AFTER  [%d %d]",cmd_vel.x(), cmd_vel.y() ); 

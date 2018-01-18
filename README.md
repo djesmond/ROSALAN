@@ -24,6 +24,9 @@ $ cd ..
 $ catkin_make
 $ source devel/setup.sh
 ```
+
+You may get an error: `Unknown CMake command "generate_messages"` in the collvoid experimental directory. As a work around, you can delete the experimental folder completely.
+
 You can now run the simulations:
 ```
 $ roslaunch orca_nav deadlock.launch
@@ -39,3 +42,14 @@ $ roslaunch orca_nav blank.launch
 Sometimes the controller window crashes, just restart the simulation.
 Sometimes only some of the robots move, just restart the simulation.
 
+
+# The Code
+Below is a few of the places of interrest if you wish to modify/experiement with ALAN:
+All the used simulations are located in the `orca_nav` package. These are slight modifications of those found in the `multi_robot_stage`. Feel free to change these.
+
+The actual ALAN code can be found in `collvoid/collvoid_local_planner/src`. In `collvoid_local_planner.cpp` is where we call the ALAN/ORCA calcuations. Specifically line 660.
+The `ROSAgent.cpp` file is where the majority of the code is. Of interest are the methods: initAsMe, computeNewVelocity(specifically line 234 - 284), Boltzmann, addNextTimeStep and computeActionAverages.
+
+There should be sufficent comments for those parts in the code, but prior knowlegde to the ALAN algorithm is assumed.
+
+Some of the properties used are defined in the header files `ROSAgent.h` and `Agent.h`.

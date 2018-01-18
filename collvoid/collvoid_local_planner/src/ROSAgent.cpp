@@ -230,7 +230,8 @@ namespace collvoid {
 
     void ROSAgent::computeNewVelocity(Vector2 pref_velocity, geometry_msgs::Twist &cmd_vel) {
         boost::mutex::scoped_lock lock(me_lock_);
-
+        
+        // is sarted is set to false from the start
         if (!isStarted) {
             // Start the clock (this will be executed on the first time the method is called)
             this->startTime = ros::Time::now();
@@ -258,8 +259,13 @@ namespace collvoid {
         this->timeWindow[0] = newAction;
 
         static const float m_pi = 3.14159265358979323846f;
+
+        // Radians relative to the currentVpref
         float angles[4] = {0.00000, m_pi/4, m_pi, -m_pi/4 };
         
+        // Don't invoke ALAN on every update, as the robot will perform worse
+        // You can change these numbers for testing to see differences
+        // Currently set to 10% chance of using ALAN
         int ra = std::rand() % 10 + 1;
         if (ra <= 1) {
             // Pick action with Boltzmann
@@ -275,7 +281,7 @@ namespace collvoid {
             Vector2 newVpref = collvoid::rotateVectorByAngle(Vector2(this->currentVpref_), angles[chosenActionId]);
             std::cout << "Selected vpref: " << newVpref.x() << " : " << newVpref.y() << std::endl;
 
-            // remove (comment) this line to run with only ORCA (disable ALAN)
+            // remove (comment) the line below to run with only ORCA (disable ALAN)
             pref_velocity = newVpref;
         }
 
